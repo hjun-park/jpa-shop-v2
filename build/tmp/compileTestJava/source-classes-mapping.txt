@@ -1,0 +1,4 @@
+com/jpabook/jpashop/JpashopApplicationTests.java
+ com.jpabook.jpashop.JpashopApplicationTests
+com/jpabook/jpashop/MemberRepositoryTest.java
+ com.jpabook.jpashop.MemberRepositoryTest
