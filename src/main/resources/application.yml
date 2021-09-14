@@ -11,6 +11,8 @@ spring:
       ddl-auto: create
     properties:
       hibernate:
+        # >> 16. 배치사이즈 설정 ( 100 의미는 땡겨오는 in 쿼리 개수를 100개로 제한 )
+        default_batch_fetch_size: 100
 #        show_sql: true
         format_sql: true
 

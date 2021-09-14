@@ -106,4 +106,49 @@ public class OrderRepository {
 				" join fetch o.delivery d", Order.class
 		).getResultList();
 	}
+
+	// >> 15-1. 페이징과 한계 돌파
+	public List<Order> findAllWithMemberDelivery(int offset, int limit) {
+		return em.createQuery(
+				"select o from Order o" +
+					" join fetch o.member m" +
+					" join fetch o.delivery d", Order.class)
+			.setFirstResult(offset)
+			.setMaxResults(limit)
+			.getResultList();
+	}
+
+	// >> 13. 패치 조인을 이용한 방식
+	//  - 그냥 조인을 하게되면 조인에 의한 중복된 데이터 값이 존재함.
+	//  - 현재 ORDER를 조회하는 거지만, 주문 ITEM이 4개이고, Join에 의해
+	//  - 결과 row가 4개 발생하게 된다. 이 경우 distinct 를 사용한다.
+
+	//  - 그냥 DB에 distinct를 사용하면 똑같이 4개의 row가 발생한다.
+	//  - 하지만 JPA에서는 2개만 결과가 나오는데 그 이유는 객체 자체를 비교해서이다.
+	//  - 가져온 Order 객체ID값이 같으면 중복으로 처리하고 중복을 제거해준다.
+	public List<Order> findAllWithItem() {
+		return em.createQuery(
+				"select distinct o from Order o" +
+					" join fetch o.member m" +
+					" join fetch o.delivery d" +
+					" join fetch o.orderItems oi" +
+					" join fetch oi.item i", Order.class)
+//			.getResultList();
+			.setFirstResult(1)
+			.setMaxResults(100)
+			.getResultList();    // 위 처럼 하면 페이징
+		// [컬렉션 상태에서 패치 조인하면 페이징이 안 된다]
+		// >> 14. 결과가 2개밖에 없으니까 100개 끌어도 2개일거란 생각
+		// >> FirstResult와 MaxResult를 사용하고 fetch join을 사용하면 문제 발생
+		// >> fetch join을 썼는데 거기에 페이징 쿼리가 들어가버린 상황
+		// >> 즉, 메모리에서 페이징 처리를 해버림
+
+		// >> 만약 데이터가 10000개 있었다면 ?
+		// >> 10000개를 다 퍼올린 다음에 페이징 처리를 하게 됨 ( Out of Memory )
+		// >> 기대하는 결과는 총 2개지만, 결과는 중복을 가진 4개가 나와버림
+
+		// >> [해결방법]
+		// >> 1:다 fetch join 상태에서는 페이징을 하지 않는다.
+		// >> order, member, delivery 1:1 이지만 orderItem은 1:다 인 상황
+	}
 }
